@@ -47,6 +47,7 @@ Create Genome Index for STAR and RSEM:
 .. code-block:: bash
 
 	# This is to be done just once per genome build (hg19, hg38, mm10 etc). 
+	# you need to have an existing fasta and gtf (check config.yaml)
 	snakemake -p -s Snakefile_genome --config freeze=hg19
 
 
@@ -59,7 +60,33 @@ Get raw fastq files and create a directory structure:
 	Rscript getSRA.R SRP033200
 	Rscript getSRA.R GSE52564
 
-This will create a directory structure like this:
+This will create a directory structure under the source dir (by default: /mnt/rnaseq/data/raw) like this:
+
+.. code-block:: bash
+
+	.
+	├── GSE52564
+	│   ├── sra
+	├── SRP033200
+	│   └── sra
+	└── log.txt
+
+Run snakemake
+"""""""""""""
+
+Then run snakemake with three parameters: 
+
+1. -f or --freeze. The genome build (e.g. mm10, hg19 or hg38).
+2. -s or --sourcedir. The source directory which is path to the project directory. 
+3. -p or --paired. TRUE or FALSE for paired or single-ended reads.
+
+.. code-block:: bash
+
+	# E.g. to process data in /mnt/rnaseq/data/raw/GSE57945
+	source activate rnaseq-env
+	bash run_snakemake.sh -f=hg38 -s=/mnt/rnaseq/data/raw/GSE57945/ -p=FALSE 
+
+This will create an output directory structure like this:
 
 .. code-block:: bash
 
@@ -85,20 +112,4 @@ This will create a directory structure like this:
 	│   │   └── SRR1033783.theta
 	└── sra
 	    |── SRR1033783.sra
-
-Run snakemake
-"""""""""""""
-
-Then run snakemake with three parameters: 
-
-1. -f or --freeze. The genome build (e.g. mm10, hg19 or hg38).
-2. -s or --sourcedir. The source directory which is path to the project directory. 
-3. -p or --paired. TRUE or FALSE for paired or single-ended reads.
-
-.. code-block:: bash
-
-	# E.g. to process data in /mnt/rnaseq/data/raw/GSE57945
-	source activate rnaseq-env
-	bash run_snakemake.sh -f=hg38 -s=/mnt/rnaseq/data/raw/GSE57945/ -p=FALSE 
-
 
