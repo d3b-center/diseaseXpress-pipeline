@@ -83,14 +83,18 @@ Then run snakemake with three parameters:
 .. code-block:: bash
 
 	# E.g. to process data in /mnt/rnaseq/data/raw/GSE57945
+	# for single-ended reads
 	source activate rnaseq-env
-	bash run_snakemake.sh -f=hg38 -s=/mnt/rnaseq/data/raw/GSE57945/ -p=FALSE 
+	bash run_snakemake.sh -f=hg38 -s=/mnt/rnaseq/data/raw/GSE57945 -p=FALSE 
+
+	# for paired-end data
+	bash run_snakemake.sh -f=hg38 -s=/mnt/rnaseq/data/raw/GSE52564 -p=TRUE
 
 This will create an output directory structure like this:
 
 .. code-block:: bash
 
-	# Output directory structure for GSE2564: 
+	# output directory structure for GSE2564: 
 
 	tree -L /mnt/rnaseq/data/raw/GSE52564/
 
