@@ -1,0 +1,49 @@
+
+configfile: "config.yaml"
+
+shell.prefix("source ~/.bash_profile")
+
+freeze = config['freeze']
+
+rule all:
+    input:
+        config['stargenomedir'][freeze] + "/" + 'SAindex',
+        config['rsemgenomedir'][freeze] + "/" + freeze + ".n2g.idx.fa"
+
+
+# STAR Genome
+rule star_genome:
+    input:
+        genomedir = config['stargenomedir'][freeze],
+        fasta = config['fasta'][freeze],
+        gtf = config['gtf'][freeze]
+    output: config['stargenomedir'][freeze] + "/" + "SAindex"
+    threads: 4
+    shell:
+        """
+        STAR \
+        --runThreadN {threads} \
+        --runMode genomeGenerate \
+        --genomeDir {input.genomedir} \
+        --genomeFastaFiles {input.fasta} \
+        --sjdbGTFfile {input.gtf} \
+        --sjdbOverhang 99
+        """
+
+
+# RSEM Genome
+rule rsem_genome:
+    input:
+        fasta = config['fasta'][freeze],
+        gtf = config['gtf'][freeze]
+    output: config['rsemgenomedir'][freeze] + "/" + freeze + ".n2g.idx.fa"
+    params:
+        genomedir = config['rsemgenomedir'][freeze]
+    threads: 4
+    shell:
+        """
+        rsem-prepare-reference \
+        -p {threads} \
+        --gtf {input.gtf} {input.fasta} {params.genomedir}
+        """
+

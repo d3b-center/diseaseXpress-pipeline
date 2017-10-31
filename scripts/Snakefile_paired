@@ -1,0 +1,119 @@
+import os
+from os import listdir
+from os.path import isfile, join
+
+configfile: 'config.yaml'
+
+shell.prefix('source ~/.bash_profile')
+
+freeze = config['freeze']
+print('Genome Build: ',freeze)
+
+sourcedir = config['sourcedir'].rstrip(os.sep) 
+sourcedir = os.path.basename(sourcedir)
+print('Project: ', sourcedir)
+
+mypath = config['sourcedir'] + '/' + config['datadirs']['sra']
+SAMPLES = [os.path.splitext(f)[0] for f in listdir(mypath) if f.endswith('.sra') & isfile(join(mypath, f))]
+print('Samples:')
+print(SAMPLES)
+
+print('Creating directories...')
+os.system('mkdir -p ' + config['sourcedir'] + '/' + config['datadirs']['fastq'])
+os.system('mkdir -p ' + config['sourcedir'] + '/' + config['datadirs']['bam'])
+os.system('mkdir -p ' + config['sourcedir'] + '/' + config['datadirs']['quant'])
+print('Done!')
+
+rule all:
+    input:
+        #expand(config['sourcedir'] + config['datadirs']['fastq'] + '/{file}_{rep}.fastq.gz', file = SAMPLES, rep = ['1','2']),
+        #expand(config['sourcedir'] + config['datadirs']['bam'] + '/{file}_Aligned.toTranscriptome.out.bam', file = SAMPLES),
+        expand(config['sourcedir'] + '/' + config['datadirs']['quant'] + '/{file}.isoforms.results', file = SAMPLES)
+
+# SRA to fastq
+rule fastq_dump:
+    input:
+        sra = config['sourcedir'] + '/' + config['datadirs']['sra'] + '/{file}.sra'
+    params:
+        fastqdump = config['tools']['fastqdump'],
+        outdir = config['sourcedir'] + '/' + config['datadirs']['fastq']
+    threads: 5
+    output:
+        f1 = config['sourcedir'] + '/' + config['datadirs']['fastq'] + '/{file}_1.fastq.gz',
+        f2 = config['sourcedir'] + '/' + config['datadirs']['fastq'] + '/{file}_2.fastq.gz'
+    shell:
+        """
+        echo running fastqdump...
+
+        {params.fastqdump} --split-3 --gzip --outdir {params.outdir} {input.sra}
+        """
+
+# STAR
+rule star_align:
+    input:
+        f1 = config['sourcedir'] + '/' + config['datadirs']['fastq'] + '{file}_1.fastq.gz',
+        f2 = config['sourcedir'] + '/' + config['datadirs']['fastq'] + '{file}_2.fastq.gz'
+    output:
+        out = config['sourcedir'] + '/' + config['datadirs']['bam'] + '{file}_Aligned.toTranscriptome.out.bam'
+    params:
+        star = config['tools']['star'],
+        genomedir = config['stargenomedir'][freeze],
+        prefix = config['sourcedir'] + '/' + config['datadirs']['bam'] + '{file}_'
+    threads: 5
+    shell:  
+        """
+        echo running STAR...
+
+        {params.star} \
+        --runThreadN {threads} \
+        --genomeDir {params.genomedir} \
+        --readFilesIn {input.f1} {input.f2} \
+        --readFilesCommand zcat \
+        --outFileNamePrefix {params.prefix} \
+        --outSAMtype None \
+        --outSAMunmapped Within \
+        --quantMode TranscriptomeSAM \
+        --outSAMattributes NH HI AS NM MD \
+        --outFilterType BySJout \
+        --outFilterMultimapNmax 20 \
+        --outFilterMismatchNmax 999 \
+        --outFilterMismatchNoverReadLmax 0.04 \
+        --alignIntronMin 20 \
+        --alignIntronMax 1000000 \
+        --alignMatesGapMax 1000000 \
+        --alignSJoverhangMin 8 \
+        --alignSJDBoverhangMin 1 \
+        --sjdbScore 1 \
+        --limitBAMsortRAM 50000000000
+        """
+
+# RSEM
+rule rsem_norm:
+    input:
+        bam = config['sourcedir'] + '/' + config['datadirs']['bam'] + '{file}_Aligned.toTranscriptome.out.bam'
+    output: 
+        isoforms = config['sourcedir'] + '/' + config['datadirs']['quant'] + '{file}.isoforms.results'
+    params:
+        rsem = config['tools']['rsem'],
+        genomedir = config['rsemgenomedir'][freeze],
+        prefix = config['sourcedir'] + '/' + config['datadirs']['quant'] + '{file}'
+    threads: 5
+    shell:
+        """
+        echo running RSEM...
+
+        {params.rsem} \
+        --paired-end \
+        --no-bam-output \
+        --quiet \
+        --no-qualities \
+        -p {threads} \
+        --forward-prob 0.5 \
+        --seed-length 25 \
+        --fragment-length-mean -1.0 \
+        --bam {input.bam} {params.genomedir} {params.prefix}
+        """
+
+print('Pushing results to s3 bucket...')
+cmd = 's3cmd put /mnt/rnaseq/data/raw/%s/quant/*.results s3://d3b.dam/disease-express/all-data/%s/' % (sourcedir, sourcedir)
+os.system(cmd)

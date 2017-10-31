@@ -1,0 +1,35 @@
+
+freeze: hg19
+
+sourcedir: /mnt/rnaseq/data/raw/
+
+datadirs:
+  sra: sra
+  fastq: fastq
+  bam: bam
+  quant: quant
+
+tools:
+  fastqdump: fastq-dump
+  star: STAR
+  rsem: rsem-calculate-expression
+
+stargenomedir: 
+  mm10: /mnt/rnaseq/data/reference/star_db/mm10
+  hg38: /mnt/rnaseq/data/reference/star_db/hg38
+  hg19: /mnt/rnaseq/data/reference/star_db/hg19
+
+rsemgenomedir:
+  mm10: /mnt/rnaseq/data/reference/rsem_db/mm10/mm10
+  hg38: /mnt/rnaseq/data/reference/rsem_db/hg38/hg38
+  hg19: /mnt/rnaseq/data/reference/rsem_db/hg19/hg19
+
+fasta: 
+  mm10: /mnt/rnaseq/data/reference/mm10/mm10.fa
+  hg38: /mnt/rnaseq/data/reference/hg38/hg38_no_alt.fa
+  hg19: /mnt/rnaseq/data/reference/hg19/hg19.fa
+
+gtf: 
+  mm10: /mnt/rnaseq/data/annotation/mm10/gencode.vM12.annotation.gtf
+  hg38: /mnt/rnaseq/data/annotation/hg38/gencode.v23.annotation.gtf
+  hg19: /mnt/rnaseq/data/annotation/hg19/gencode.v19.annotation.gtf
