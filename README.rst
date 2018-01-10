@@ -4,7 +4,7 @@
 DiseaseXpress RNA-seq Pipeline
 ******************************
 
-:authors: Komal Rathi, Pichai Raman
+:authors: Komal Rathi
 :contact: rathik@email.chop.edu
 :organization: DBHi, CHOP
 :status: This is "work in progress"
