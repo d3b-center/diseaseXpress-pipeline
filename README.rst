@@ -14,6 +14,15 @@ DiseaseXpress RNA-seq Pipeline
    :keywords: scripts, DiseaseXpress, 2017
    :description: DiseaseXpress rnaseq processing scripts.
 
+
+Login
+#####
+
+.. code-block:: bash
+
+	ssh -i "rnaseq.pem" centos@ec2-54-174-249-167.compute-1.amazonaws.com
+
+
 Installation
 ############
 
