@@ -1,7 +1,7 @@
-library(GEOquery)
-library(SRAdb)
-library(DBI)
-library(httr)
+library(GEOquery, quietly = T, verbose = F, warn.conflicts = F)
+library(SRAdb, quietly = T, verbose = F, warn.conflicts = F)
+library(DBI, quietly = T, verbose = F, warn.conflicts = F)
+library(httr, quietly = T, verbose = F, warn.conflicts = F)
 
 sink("/mnt/rnaseq/data/raw/log.txt")
 
